@@ -29,32 +29,18 @@ func InitRouter(bookService *service.BookService) *gin.Engine {
 		c.Next()
 	})
 
+	bookHandler := NewBookHandler(bookService)
 	// ENDPOINTS v1 group
 	api := r.Group("/api/v1")
 	{
-		api.GET("/books", func(c *gin.Context) {
-			books, err := bookService.GetAllBooks(c.Request.Context())
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch books"})
-				return
-			}
-			c.JSON(http.StatusOK, gin.H{"books": books})
-		})
-
-		api.POST("/books", func(c *gin.Context) {
-			var input CreateBookInput
-			if err := c.ShouldBindJSON(&input); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-				return
-			}
-
-			err := bookService.CreateBook(c.Request.Context(), input.Title, input.Author)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create book"})
-				return
-			}
-			c.JSON(http.StatusCreated, gin.H{"message": "Book created successfully"})
-		})
+		books := api.Group("/books")
+		{
+			books.GET("", bookHandler.GetBooks)
+			books.GET("/:id", bookHandler.GetBookByID)
+			books.POST("", bookHandler.CreateBook)
+			books.PUT("/:id", bookHandler.UpdateBook)
+			books.DELETE("/:id", bookHandler.DeleteBook)
+		}
 	}
 	return r
 }

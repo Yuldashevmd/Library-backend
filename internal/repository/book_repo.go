@@ -42,7 +42,29 @@ func (r *BookRepository) GetAll(ctx context.Context) ([]Book, error) {
 	return books, nil
 }
 
+func (r *BookRepository) GetByID(ctx context.Context, id int) (*Book, error) {
+	row := r.db.QueryRow(ctx, "select id, title, author from books where id = $1", id)
+	var b Book
+	if err := row.Scan(&b.ID, &b.Title, &b.Author); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &b, nil
+}
+
 func (r *BookRepository) Create(ctx context.Context, book Book) error {
 	_, err := r.db.Exec(ctx, "insert into books (title, author) values ($1, $2)", book.Title, book.Author)
+	return err
+}
+
+func (r *BookRepository) Delete(ctx context.Context, id int) error {
+	_, err := r.db.Exec(ctx, "delete from books where id = $1", id)
+	return err
+}
+
+func (r *BookRepository) Update(ctx context.Context, book Book) error {
+	_, err := r.db.Exec(ctx, "update books set title = $1, author = $2 where id = $3", book.Title, book.Author, book.ID)
 	return err
 }
