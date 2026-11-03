@@ -41,3 +41,8 @@ func (r *BookRepository) GetAll(ctx context.Context) ([]Book, error) {
 	}
 	return books, nil
 }
+
+func (r *BookRepository) Create(ctx context.Context, book Book) error {
+	_, err := r.db.Exec(ctx, "insert into books (title, author) values ($1, $2)", book.Title, book.Author)
+	return err
+}

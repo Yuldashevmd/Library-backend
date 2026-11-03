@@ -16,3 +16,11 @@ func NewBookService(repo *repository.BookRepository) *BookService {
 func (s *BookService) GetAllBooks(ctx context.Context) ([]repository.Book, error) {
 	return s.repo.GetAll(ctx)
 }
+
+func (s *BookService) CreateBook(ctx context.Context, title, author string) error {
+	book := repository.Book{
+		Title:  title,
+		Author: author,
+	}
+	return s.repo.Create(ctx, book)
+}

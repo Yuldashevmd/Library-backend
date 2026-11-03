@@ -2,9 +2,15 @@ package handler
 
 import (
 	"library/internal/service"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+type CreateBookInput struct {
+	Title  string `json:"title" binding:"required"`
+	Author string `json:"author" binding:"required"`
+}
 
 func InitRouter(bookService *service.BookService) *gin.Engine {
 	r := gin.Default()
@@ -17,7 +23,7 @@ func InitRouter(bookService *service.BookService) *gin.Engine {
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 
 		if c.Request.Method == "HTTP_METHOD_OPTIONS" {
-			c.AbortWithStatus(204)
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 		c.Next()
@@ -29,10 +35,25 @@ func InitRouter(bookService *service.BookService) *gin.Engine {
 		api.GET("/books", func(c *gin.Context) {
 			books, err := bookService.GetAllBooks(c.Request.Context())
 			if err != nil {
-				c.JSON(500, gin.H{"error": "Failed to fetch books"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch books"})
 				return
 			}
-			c.JSON(200, gin.H{"books": books})
+			c.JSON(http.StatusOK, gin.H{"books": books})
+		})
+
+		api.POST("/books", func(c *gin.Context) {
+			var input CreateBookInput
+			if err := c.ShouldBindJSON(&input); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+				return
+			}
+
+			err := bookService.CreateBook(c.Request.Context(), input.Title, input.Author)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create book"})
+				return
+			}
+			c.JSON(http.StatusCreated, gin.H{"message": "Book created successfully"})
 		})
 	}
 	return r
