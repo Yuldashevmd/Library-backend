@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"library/internal/repository"
 	"library/internal/service"
 	"net/http"
 	"strconv"
@@ -60,16 +59,17 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 
 func (h *BookHandler) UpdateBook(c *gin.Context) {
 	strId := c.Param("id")
-	book := repository.Book{
-		Title:  c.PostForm("title"),
-		Author: c.PostForm("author"),
+	var input CreateBookInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
 	}
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID"})
 		return
 	}
-	err = h.service.UpdateBook(c.Request.Context(), id, book.Title, book.Author)
+	err = h.service.UpdateBook(c.Request.Context(), id, input.Title, input.Author)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update book"})
 		return

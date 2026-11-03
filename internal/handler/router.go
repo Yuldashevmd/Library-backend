@@ -36,10 +36,10 @@ func InitRouter(bookService *service.BookService) *gin.Engine {
 		books := api.Group("/books")
 		{
 			books.GET("", bookHandler.GetBooks)
-			books.GET("/:id", bookHandler.GetBookByID)
 			books.POST("", bookHandler.CreateBook)
-			books.PUT("/:id", bookHandler.UpdateBook)
-			books.DELETE("/:id", bookHandler.DeleteBook)
+			books.GET(":id", bookHandler.GetBookByID)
+			books.PUT(":id", bookHandler.UpdateBook)
+			books.DELETE(":id", bookHandler.DeleteBook)
 		}
 	}
 	return r
